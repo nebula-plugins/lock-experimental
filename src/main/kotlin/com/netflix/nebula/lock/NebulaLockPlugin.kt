@@ -10,7 +10,6 @@ class NebulaLockPlugin: Plugin<Project> {
     override fun apply(project: Project) {
         project.tasks.create("updateLocks", UpdateLockTask::class.java)
         project.tasks.create("convertLegacyLocks", ConvertLegacyLockTask::class.java)
-//        project.extensions.add("lockedDependencies", arrayListOf<Any>())
         GroovyLockExtensions.enhanceDependencySyntax(project)
     }
 }

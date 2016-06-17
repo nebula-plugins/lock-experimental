@@ -18,7 +18,8 @@ class UpdateLockTaskTest : TestKitTest() {
             repositories {
                 mavenCentral()
             }
-        """)
+
+        """.trim('\n').trimIndent())
     }
 
     @Test

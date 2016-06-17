@@ -7,10 +7,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.control.SourceUnit
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ModuleIdentifier
-import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
-import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import java.util.*
 
 class GroovyLockAstVisitor(val project: Project,
@@ -59,12 +56,8 @@ class GroovyLockAstVisitor(val project: Project,
                 }
             }.filterNotNull()
 
-            if(locks.size > 1) {
-                updates.add(GroovyLockUpdate.CommaSeparatedDependenciesLock(call, locks))
-            }
-            else if(locks.size == 1) {
-                updates.add(GroovyLockUpdate.SingleDependencyLock(call, locks[0]))
-            }
+            if(locks.isNotEmpty())
+                updates.add(GroovyLockUpdate(call, locks))
         }
     }
 
