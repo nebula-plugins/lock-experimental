@@ -25,19 +25,19 @@ To apply this plugin:
 
 ## Why the change?
 
-(1) At various times, [gradle-dependency-lock-plugin](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) served functions that are now
+1. At various times, [gradle-dependency-lock-plugin](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) served functions that are now
 best served by other means, e.g. version alignment which is now satisfied by [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules-plugin).
 
-(2) **dependencis.lock** is hard to read and separate from where users define their dependencies in **build.gradle**. Unaware
+2. **dependencis.lock** is hard to read and separate from where users define their dependencies in **build.gradle**. Unaware
 that nebula.dependency-lock is in effect, engineers are often confused about why they don't get a version they expect when they update
  **build.gradle**.
 
-(3) Manually updating a particular dependency while leaving the rest locked requires a-priori knowledge of
+3. Manually updating a particular dependency while leaving the rest locked requires a-priori knowledge of
  the existence of `./gradlew updateLock -PdependencyLock.updateDependencies=com.example:foo,com.example:bar` mechanism. Well meaning
  engineers may attempt to update **dependencies.lock** manually, not realizing that the dependency they are attempting to update
  is reflected once per configuration that it participates in, and their manual effort fails to achieve their goal.
 
-(4) nebula.dependency-lock applies its locks using `resolutionStrategy.force`, which can lead to ordering problems with other
+4. nebula.dependency-lock applies its locks using `resolutionStrategy.force`, which can lead to ordering problems with other
 plugins that affect `resolutionStrategy`.
 
 ## The `lock` extension method
@@ -79,6 +79,6 @@ entries and adds the appropriate `lock` method call to your **build.gradle**.
 
 We no longer believe there are any reasons to lock transitive dependencies, because
 
-(1) The vast majority of Java libraries are published with fixed versions (and Gradle does not support Ivy's `revConstraint`)
-(2) Responsibility for version alignment has been externalized to [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules-plugin).
+1. The vast majority of Java libraries are published with fixed versions (and Gradle does not support Ivy's `revConstraint`)
+2. Responsibility for version alignment has been externalized to [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules-plugin).
 
