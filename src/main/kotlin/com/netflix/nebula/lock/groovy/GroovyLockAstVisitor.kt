@@ -1,16 +1,20 @@
 package com.netflix.nebula.lock.groovy
 
+import com.netflix.nebula.lock.ConfigurationModuleIdentifier
+import com.netflix.nebula.lock.withConf
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.control.SourceUnit
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ModuleIdentifier
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import java.util.*
 
-class GroovyLockAstVisitor(val project: Project): ClassCodeVisitorSupport() {
+class GroovyLockAstVisitor(val project: Project,
+                           val overrides: Map<ConfigurationModuleIdentifier, String>): ClassCodeVisitorSupport() {
     val updates = ArrayList<GroovyLockUpdate>()
     private var inDependencies = false
 
@@ -42,14 +46,13 @@ class GroovyLockAstVisitor(val project: Project): ClassCodeVisitorSupport() {
                 when(arg) {
                     is MapExpression -> {
                         val entries = collectEntryExpressions(args)
-                        conf.find(entries["group"], entries["name"]!!, entries["version"])?.let { it.moduleVersion }
+                        conf.lockedVersion(entries["group"], entries["name"]!!)
                     }
                     is ConstantExpression -> {
                         "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(arg.value as String)?.run {
                             val group = groupValues[1].let { if(it.isEmpty()) null else it }
                             val name = groupValues[2]
-                            val version = groupValues[3].let { if(it.isEmpty()) null else it }
-                            conf.find(group, name, version)?.let { it.moduleVersion }
+                            conf.lockedVersion(group, name)
                         }
                     }
                     else -> null
@@ -72,8 +75,8 @@ class GroovyLockAstVisitor(val project: Project): ClassCodeVisitorSupport() {
                     .map { it.keyExpression.text to it.valueExpression.text }
                     .toMap()
 
-    private fun Configuration.find(group: String?, name: String, version: String?): ResolvedDependency? {
+    private fun Configuration.lockedVersion(group: String?, name: String): String? {
         val mid = DefaultModuleIdentifier(group, name)
-        return resolvedConfiguration.firstLevelModuleDependencies.find { it.module.id.module.equals(mid) }
+        return overrides[mid.withConf(this)] ?: resolvedConfiguration.firstLevelModuleDependencies.find { it.module.id.module.equals(mid) }?.moduleVersion
     }
 }

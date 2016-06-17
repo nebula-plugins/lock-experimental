@@ -19,7 +19,7 @@ class GroovyLockExtensions {
             if(delegate instanceof ExternalModuleDependency) {
                 ExternalModuleDependency dep = delegate
 
-                def containingConf = cachedProject.configurations.find { it.dependencies.any { it.equals(dep) } }
+                def containingConf = cachedProject.configurations.find { it.dependencies.any { it.is(dep) } }
                 containingConf.dependencies.remove(dep)
 
                 def locked = new DefaultExternalModuleDependency(dep.group, dep.name, lockedVersion, dep.configuration)

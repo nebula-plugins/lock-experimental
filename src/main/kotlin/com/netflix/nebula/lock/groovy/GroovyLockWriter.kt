@@ -22,7 +22,7 @@ class GroovyLockWriter() {
                         i += method.lastLineNumber - method.lineNumber + 1
                     }
                     is GroovyLockUpdate.CommaSeparatedDependenciesLock -> {
-                        // TODO split ast into several
+                        // TODO split ast into several¡¡
                     }
                 }
             } ?: updated.append(lines[i++])

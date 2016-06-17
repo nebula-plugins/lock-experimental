@@ -32,7 +32,8 @@ contacts {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+    compileOnly 'org.codehaus.groovy:groovy-all:2.4.4'
+    compile 'com.beust:klaxon:0.24'
 }
 
 pluginBundle {

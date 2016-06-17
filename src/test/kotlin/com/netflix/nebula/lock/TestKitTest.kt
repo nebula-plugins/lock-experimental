@@ -19,6 +19,7 @@ open class TestKitTest {
     lateinit var buildFile: File
     lateinit var settingsFile: File
 
+    @Before
     open fun before() {
         projectDir = temp.root
         buildFile = File(projectDir, "build.gradle")
