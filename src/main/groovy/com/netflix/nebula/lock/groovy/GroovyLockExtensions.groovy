@@ -1,3 +1,20 @@
+/*
+ * Copyright 2016-2017 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.netflix.nebula.lock.groovy
 
 import org.gradle.api.Project
@@ -16,21 +33,20 @@ class GroovyLockExtensions {
         cachedProject = project
 
         Dependency.metaClass.lock = { lockedVersion ->
-            if(delegate instanceof ExternalModuleDependency) {
+            if(delegate instanceof ExternalModuleDependency && !cachedProject.hasProperty('dependencyLock.ignore')) {
                 ExternalModuleDependency dep = delegate
 
                 def containingConf = cachedProject.configurations.find { it.dependencies.any { it.is(dep) } }
                 containingConf.dependencies.remove(dep)
 
-                def locked = new DefaultExternalModuleDependency(dep.group, dep.name, lockedVersion, dep.configuration)
+                def locked = new DefaultExternalModuleDependency(dep.group, dep.name, lockedVersion?.toString(), dep.configuration)
                 locked.setChanging(dep.changing)
                 locked.setForce(dep.force)
 
                 containingConf.dependencies.add(locked)
             }
-            else {
-                // TODO locks do not apply to anything but external dependencies
-            }
+
+            return this
         }
     }
 }
