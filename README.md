@@ -25,30 +25,37 @@ To apply this plugin:
 
 ## Why the change?
 
+We believe this is the real root use case for dependency locks: "I want to write static versions into my
+dependency blocks, but I don't want to have to manually update the static versions as new versions come out."
+
 1. At various times, [gradle-dependency-lock-plugin](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) served functions that are now
 best served by other means, e.g. version alignment which is now satisfied by [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules-plugin).
 
-2. **dependencis.lock** is hard to read and separate from where users define their dependencies in **build.gradle**. Unaware
-that nebula.dependency-lock is in effect, engineers are often confused about why they don't get a version they expect when they update
+2. **dependencies.lock** is hard to read and separate from where users define their dependencies in **build.gradle**. Unaware
+that nebula.dependency-lock is in effect, engineers are often confused about why they don't get a certain version when they update
  **build.gradle**.
 
-3. Manually updating a particular dependency while leaving the rest locked requires a-priori knowledge of
- the existence of `./gradlew updateLock -PdependencyLock.updateDependencies=com.example:foo,com.example:bar` mechanism. Well meaning
+3. Manually updating a particular dependency while leaving the rest locked requires *a priori* knowledge of
+ the existence of the `./gradlew updateLock -PdependencyLock.updateDependencies=com.example:foo,com.example:bar` mechanism. Well-meaning
  engineers may attempt to update **dependencies.lock** manually, not realizing that the dependency they are attempting to update
- is reflected once per configuration that it participates in, and their manual effort fails to achieve their goal.
+ is reflected once for each configuration it appears in, and their manual effort fails to achieve their goal.
 
 4. nebula.dependency-lock applies its locks using `resolutionStrategy.force`, which can lead to ordering problems with other
 plugins that affect `resolutionStrategy`.
 
 ## The `lock` extension method
 
+    compile 'com.google.guava:guava:latest.release' lock '19.0'
+
 The experimental plugin hangs a method on `org.gradle.api.artifacts.Dependency` called `lock` that takes a single `String` parameter with
 the locked version. The `lock` method receives the `Dependency` created and immediately substitutes it with a `Dependency` with the locked version.
 This happens before any other dependency-affecting event in the Gradle ecosystem.
 
-In effect, `lock` makes it seem to Gradle that you that rather than writing a dynamic constraint like **latest.release** you had actually just written
-in a fixed version. We believe this is the real root use case for dependency locks: I want to write static versions into my
-dependency blocks, but I don't want to have to manually update the static versions as new versions come out.
+In effect, `lock` makes it seem to Gradle that rather than writing a dynamic constraint like **latest.release** you had actually just written
+in a fixed version.
+
+If you want to just update a single dependency, rather than running ``./gradlew updateLock -PdependencyLock.updateDependencies=...`, you can simply
+change the text of the `lock` in **build.gradle**.
 
 ## The `updateLocks` task
 
