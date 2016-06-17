@@ -1,0 +1,22 @@
+buildscript {
+    repositories { mavenLocal() }
+    dependencies {
+        classpath 'com.netflix.nebula:nebula-lock:latest.release'
+    }
+
+    configurations.classpath.resolutionStrategy.cacheDynamicVersionsFor 0, 'minutes'
+}
+
+plugins {
+  id 'java'
+}
+
+apply plugin: 'nebula.lock'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'com.google.guava:guava:latest.release'
+}

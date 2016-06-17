@@ -1,0 +1,5 @@
+build/
+.gradle/
+classes/
+**/.gradle/
+gradle.properties
