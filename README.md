@@ -39,8 +39,8 @@ To apply this plugin:
 
 ## Why the change?
 
-We believe this is the real root use case for dependency locks: "I want to write static versions into my
-dependency blocks, but I don't want to have to manually update the static versions as new versions come out."
+We believe this is the real root use case for dependency locks: **"I want to write static versions into my
+dependency blocks, but I don't want to have to manually update the static versions as new versions come out."**
 
 1. At various times, [gradle-dependency-lock-plugin](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) served functions that are now
 best served by other means, e.g. version alignment which is now satisfied by [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules-plugin).
