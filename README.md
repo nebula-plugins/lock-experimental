@@ -63,6 +63,8 @@ Running `./gradlew updateLocks` resolves each configuration without locks, and u
 dependencies in your **build.gradle** and write out the appropriate `lock` method call with the resolved version. `updateLocks`
 also detects if you change the unlocked version to a static constraint and removes the `lock` method call.
 
+### Multi-module projects
+
 In the case of a dependency specified in a root project, e.g.
 
     subprojects {
@@ -72,6 +74,8 @@ In the case of a dependency specified in a root project, e.g.
     }
 
 the `updateLocks` task will evaluate the resolved configuration for each of the subprojects and lock at the highest dependency found.
+
+### Comma-separated dependencies
 
 Because Gradle returns `null` from a method call like
 
