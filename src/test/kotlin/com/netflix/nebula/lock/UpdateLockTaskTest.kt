@@ -52,6 +52,8 @@ class UpdateLockTaskTest : TestKitTest() {
 
         runTasksSuccessfully("updateLocks")
 
+        println(buildFile.readText())
+
         assertTrue(buildFile.readText().contains("""
             dependencies {
                 compile 'com.google.guava:guava:18.+' lock '18.0'
@@ -111,6 +113,30 @@ class UpdateLockTaskTest : TestKitTest() {
             dependencies {
                 compile 'com.google.guava:guava:18.+' lock '18.0'
                 compile 'commons-lang:commons-lang:2.+' lock '2.6'
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun lockRootProjectDependencies() {
+        addSubproject("sub", "plugins { id 'nebula.lock-experimental' }")
+
+        buildFile.writeText("""
+            subprojects {
+                apply plugin: 'java'
+                repositories { mavenCentral() }
+                dependencies {
+                    compile 'com.google.guava:guava:18.+'
+                }
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("sub:updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+                dependencies {
+                    compile 'com.google.guava:guava:18.+' lock '18.0'
+                }
             }
         """.trim('\n').trimIndent()))
     }

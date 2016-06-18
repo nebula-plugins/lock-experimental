@@ -45,24 +45,26 @@ class LockService(val project: Project, val locksInEffect: List<Locked>) {
             }
         }
 
-        when {
-            project.buildFile.name.endsWith("gradle") -> updateLockGroovy(overrides)
-            project.buildFile.name.endsWith("kts") -> updateLockKotlin(overrides)
-            else -> { /* do nothing */ }
+        arrayOf(project, project.rootProject).toSet().forEach { p ->
+            when {
+                p.buildFile.name.endsWith("gradle") -> updateLockGroovy(p, overrides)
+                p.buildFile.name.endsWith("kts") -> updateLockKotlin(p, overrides)
+                else -> { /* do nothing */ }
+            }
         }
     }
 
-    fun updateLockGroovy(overrides: Map<ConfigurationModuleIdentifier, String>) {
-        val ast = AstBuilder().buildFromString(project.buildFile.readText())
+    fun updateLockGroovy(p: Project, overrides: Map<ConfigurationModuleIdentifier, String>) {
+        val ast = AstBuilder().buildFromString(p.buildFile.readText())
         val stmt = ast.find { it is BlockStatement }
         if(stmt is BlockStatement) {
-            val visitor = GroovyLockAstVisitor(project, overrides)
+            val visitor = GroovyLockAstVisitor(p, overrides)
             visitor.visitBlockStatement(stmt)
-            groovyLockWriter.updateLocks(project, visitor.updates)
+            groovyLockWriter.updateLocks(p, visitor.updates)
         }
     }
 
-    fun updateLockKotlin(overrides: Map<ConfigurationModuleIdentifier, String>) {
+    fun updateLockKotlin(p: Project, overrides: Map<ConfigurationModuleIdentifier, String>) {
         // TODO implement me
     }
 }

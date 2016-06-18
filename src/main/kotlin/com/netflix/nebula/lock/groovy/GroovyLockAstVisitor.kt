@@ -23,8 +23,8 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.control.SourceUnit
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
 import java.util.*
 
 class GroovyLockAstVisitor(val project: Project,
@@ -48,38 +48,42 @@ class GroovyLockAstVisitor(val project: Project,
 
     fun visitMethodCallInDependencies(call: MethodCallExpression) {
         // https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/dsl/DependencyHandler.html
-        val conf = project.configurations.findByName(call.methodAsString)
+        val conf = call.methodAsString
         val args = when(call.arguments) {
             is ArgumentListExpression -> (call.arguments as ArgumentListExpression).expressions
             is TupleExpression -> (call.arguments as TupleExpression).expressions
             else -> emptyList()
         }
 
-        if(conf is Configuration) {
+        if(isConf(conf)) {
             val locks = args.map { arg ->
-                when(arg) {
+                when (arg) {
                     is MapExpression -> {
                         val entries = collectEntryExpressions(args)
                         conf.lockedVersion(entries["group"], entries["name"]!!).let { locked ->
-                            if(locked == entries["version"]) null else locked
+                            if (locked == entries["version"]) null else locked
                         }
                     }
                     is ConstantExpression -> {
                         "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(arg.value as String)?.run {
-                            val group = groupValues[1].let { if(it.isEmpty()) null else it }
+                            val group = groupValues[1].let { if (it.isEmpty()) null else it }
                             val name = groupValues[2]
-                            val version = groupValues[3].let { if(it.isEmpty()) null else it }
-                            conf.lockedVersion(group, name).let { locked -> if(locked == version) null else locked }
+                            val version = groupValues[3].let { if (it.isEmpty()) null else it }
+                            conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
                         }
                     }
                     else -> null
                 }
             }
 
-            if(locks.isNotEmpty())
+            if (locks.isNotEmpty())
                 updates.add(GroovyLockUpdate(call, locks))
         }
     }
+
+    private fun isConf(methodName: String) =
+            project.configurations.findByName(methodName) != null ||
+                    project.subprojects.any { sub -> sub.configurations.findByName(methodName) != null }
 
     private fun collectEntryExpressions(args: List<Expression>) =
             args.filterIsInstance(MapExpression::class.java)
@@ -88,8 +92,26 @@ class GroovyLockAstVisitor(val project: Project,
                     .map { it.keyExpression.text to it.valueExpression.text }
                     .toMap()
 
-    private fun Configuration.lockedVersion(group: String?, name: String): String? {
+    private fun String.lockedVersion(group: String?, name: String): String? {
         val mid = DefaultModuleIdentifier(group, name)
-        return overrides[mid.withConf(this)] ?: resolvedConfiguration.firstLevelModuleDependencies.find { it.module.id.module.equals(mid) }?.moduleVersion
+
+        fun overrideOrResolvedVersion(p: Project): String? {
+            val conf = p.configurations.getByName(this)
+            return overrides[mid.withConf(conf)] ?: conf.resolvedConfiguration.firstLevelModuleDependencies.find { it.module.id.module.equals(mid) }?.moduleVersion
+        }
+
+        return if(project.rootProject == project) {
+            if(project.subprojects.isEmpty()) {
+                // single module project
+                overrideOrResolvedVersion(project)
+            }
+            else {
+                // root project of a multi-module project
+                project.subprojects.map(::overrideOrResolvedVersion).maxWith(DefaultVersionComparator().asStringComparator())
+            }
+        } else {
+            // subproject of a multi-module project
+            overrideOrResolvedVersion(project)
+        }
     }
 }
