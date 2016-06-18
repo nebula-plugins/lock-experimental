@@ -108,7 +108,7 @@ Running with `-PdependencyLock.ignore` causes the lock method to short-circuit a
 ## Migration from the legacy plugin
 
 Running `./gradlew convertLegacyLocks` uses an AST parser to locate first order dependencies matching **dependencies.lock**
-entries and adds the appropriate `lock` method call to your **build.gradle**.
+entries and adds the appropriate `lock` method call to your **build.gradle**. It then deletes **dependencies.lock**.
 
 ## What about locking transitives?
 
