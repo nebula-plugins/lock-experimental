@@ -1,5 +1,19 @@
 # Gradle Dependency Lock (Experimental)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+- [Purpose](#purpose)
+- [Usage](#usage)
+- [Why the change?](#why-the-change)
+- [The `lock` extension method](#the-lock-extension-method)
+- [The `updateLocks` task](#the-updatelocks-task)
+  - [Multi-module projects](#multi-module-projects)
+  - [Comma-separated dependencies](#comma-separated-dependencies)
+- [Ignoring locks](#ignoring-locks)
+- [Migration from the legacy plugin](#migration-from-the-legacy-plugin)
+- [What about locking transitives?](#what-about-locking-transitives)
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Purpose
 
 This project is an experimental major overhaul of the [gradle-dependency-lock-plugin](https://github.com/nebula-plugins/gradle-dependency-lock-plugin).
