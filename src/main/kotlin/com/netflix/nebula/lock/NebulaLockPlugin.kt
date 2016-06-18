@@ -31,7 +31,6 @@ class NebulaLockPlugin: Plugin<Project> {
 
         project.tasks.create("updateLocks", UpdateLockTask::class.java) { it.lockService = lockService }
         project.tasks.create("convertLegacyLocks", ConvertLegacyLockTask::class.java) { it.lockService = lockService }
-        project.extensions.create("lock", LockExtension::class.java)
         GroovyLockExtensions.enhanceDependencySyntax(project, locksInEffect)
     }
 }

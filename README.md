@@ -103,7 +103,7 @@ the task will generate the following:
 
 ## Ignoring locks
 
-Running with `-PdependencyLock.ignore` causes the lock method to short-circuit and leave dynamic constraints in affect.
+Running with `-PdependencyLock.ignore` causes the lock method to short-circuit and leave dynamic constraints in effect.
 
 ## Migration from the legacy plugin
 
