@@ -12,6 +12,7 @@
 - [Ignoring locks](#ignoring-locks)
 - [Migration from the legacy plugin](#migration-from-the-legacy-plugin)
 - [What about locking transitives?](#what-about-locking-transitives)
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Purpose
