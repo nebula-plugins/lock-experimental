@@ -38,10 +38,11 @@ class GroovyLockWriter() {
                         val args = (method.arguments as ArgumentListExpression).expressions
                         args.forEachIndexed { j, arg ->
                             if(j > 0) updated.append('\n')
-                            updated.append(conf.padStart(method.columnNumber + conf.length - 1, ' '))
+                            updated.append(conf.padStart(method.method.columnNumber + conf.length - 1, ' '))
                             updated.append("".padStart(args[0].columnNumber - method.method.lastColumnNumber, ' '))
                             updated.append(lines[arg.lineNumber-1].substring(arg.columnNumber-1, arg.lastColumnNumber-1))
-                            updated.append(" lock '${locks[j]}'")
+                            if(locks[j] is String)
+                                updated.append(" lock '${locks[j]}'")
                             i++
                         }
                     }
@@ -49,7 +50,8 @@ class GroovyLockWriter() {
                         if(method.lastLineNumber-1 > i)
                             updated.append(lines.subList(i, method.lastLineNumber-1).joinToString("\n") + "\n")
                         updated.append(lines[method.lastLineNumber-1].substring(0, method.lastColumnNumber-1))
-                        updated.append(" lock '${locks[0]}'")
+                        if(locks[0] is String)
+                            updated.append(" lock '${locks[0]}'")
                         i += method.lastLineNumber - method.lineNumber + 1
                     }
                 }

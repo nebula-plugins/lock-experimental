@@ -29,7 +29,7 @@ class UpdateLockTaskTest : TestKitTest() {
         buildFile.writeText("""
             plugins {
                 id 'java'
-                id 'nebula.lock'
+                id 'nebula.lock-experimental'
             }
 
             repositories {
@@ -63,7 +63,37 @@ class UpdateLockTaskTest : TestKitTest() {
     }
 
     @Test
+    fun updateAnExistingLock() {
+        buildFile.appendText("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+' lock '16.0'
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+' lock '18.0'
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
     fun lockStatementsOnDependenciesWithStaticVersionsAreRemoved() {
+        buildFile.appendText("""
+            dependencies {
+                compile 'com.google.guava:guava:18.0' lock '18.0'
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+            dependencies {
+                compile 'com.google.guava:guava:18.0'
+            }
+        """.trim('\n').trimIndent()))
     }
 
     @Test

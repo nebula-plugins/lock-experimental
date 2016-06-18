@@ -32,3 +32,6 @@ data class GradleDependency(val group: String?,
 data class ConfigurationModuleIdentifier(val conf: Configuration, val mid: ModuleIdentifier)
 
 fun ModuleIdentifier.withConf(conf: Configuration) = ConfigurationModuleIdentifier(conf, this)
+
+open class LockExtension {
+}

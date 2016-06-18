@@ -23,10 +23,21 @@ import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.gradle.api.Project
 
-class UpdateLockService(val project: Project) {
+class LockService(val project: Project, val locksInEffect: List<Locked>) {
     val groovyLockWriter = GroovyLockWriter()
 
-    fun update(overrides: Map<ConfigurationModuleIdentifier, String> = emptyMap()) {
+    fun undoLocks() {
+        locksInEffect.forEach { lock ->
+            project.configurations.find { it.dependencies.any { it == lock.locked } }?.apply {
+                dependencies.remove(lock.locked)
+                dependencies.add(lock.original)
+            }
+        }
+    }
+
+    fun updateLocks(overrides: Map<ConfigurationModuleIdentifier, String> = emptyMap()) {
+        undoLocks()
+
         project.configurations.all {
             it.resolutionStrategy.apply {
                 cacheDynamicVersionsFor(0, "seconds")

@@ -17,11 +17,13 @@
 
 package com.netflix.nebula.lock.task
 
-import com.netflix.nebula.lock.UpdateLockService
+import com.netflix.nebula.lock.LockService
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 open class UpdateLockTask: DefaultTask() {
+    lateinit var lockService: LockService
+
     @TaskAction
-    fun updateLock() = UpdateLockService(project).update()
+    fun updateLock() = lockService.updateLocks()
 }

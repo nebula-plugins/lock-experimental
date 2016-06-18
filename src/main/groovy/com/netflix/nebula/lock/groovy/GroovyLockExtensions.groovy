@@ -17,6 +17,7 @@
 
 package com.netflix.nebula.lock.groovy
 
+import com.netflix.nebula.lock.Locked
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ExternalModuleDependency
@@ -28,9 +29,11 @@ class GroovyLockExtensions {
      * This is only really a problem during test execution, but the solution doesn't harm normal operation.
      */
     static Project cachedProject
+    static List<Locked> cachedLocksInEffect
 
-    static void enhanceDependencySyntax(Project project) {
+    static void enhanceDependencySyntax(Project project, List<Locked> locksInEffect) {
         cachedProject = project
+        cachedLocksInEffect = locksInEffect
 
         Dependency.metaClass.lock = { lockedVersion ->
             if(delegate instanceof ExternalModuleDependency && !cachedProject.hasProperty('dependencyLock.ignore')) {
@@ -44,6 +47,8 @@ class GroovyLockExtensions {
                 locked.setForce(dep.force)
 
                 containingConf.dependencies.add(locked)
+
+                cachedLocksInEffect.add(new Locked(locked, dep))
             }
 
             return this

@@ -22,7 +22,7 @@ import com.beust.klaxon.Parser
 import com.beust.klaxon.obj
 import com.beust.klaxon.string
 import com.netflix.nebula.lock.ConfigurationModuleIdentifier
-import com.netflix.nebula.lock.UpdateLockService
+import com.netflix.nebula.lock.LockService
 import com.netflix.nebula.lock.withConf
 import org.gradle.api.DefaultTask
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
@@ -32,6 +32,8 @@ import java.io.FileNotFoundException
 import java.util.*
 
 open class ConvertLegacyLockTask: DefaultTask() {
+    lateinit var lockService: LockService
+
     @TaskAction
     fun convert() {
         val lockExt = project.extensions.findByName("dependencyLock")
@@ -54,7 +56,7 @@ open class ConvertLegacyLockTask: DefaultTask() {
             acc
         }
 
-        UpdateLockService(project).update(overrides)
+        lockService?.updateLocks(overrides)
 
         lockFile.delete()
     }

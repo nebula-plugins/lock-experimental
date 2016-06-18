@@ -60,18 +60,21 @@ class GroovyLockAstVisitor(val project: Project,
                 when(arg) {
                     is MapExpression -> {
                         val entries = collectEntryExpressions(args)
-                        conf.lockedVersion(entries["group"], entries["name"]!!)
+                        conf.lockedVersion(entries["group"], entries["name"]!!).let { locked ->
+                            if(locked == entries["version"]) null else locked
+                        }
                     }
                     is ConstantExpression -> {
                         "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(arg.value as String)?.run {
                             val group = groupValues[1].let { if(it.isEmpty()) null else it }
                             val name = groupValues[2]
-                            conf.lockedVersion(group, name)
+                            val version = groupValues[3].let { if(it.isEmpty()) null else it }
+                            conf.lockedVersion(group, name).let { locked -> if(locked == version) null else locked }
                         }
                     }
                     else -> null
                 }
-            }.filterNotNull()
+            }
 
             if(locks.isNotEmpty())
                 updates.add(GroovyLockUpdate(call, locks))

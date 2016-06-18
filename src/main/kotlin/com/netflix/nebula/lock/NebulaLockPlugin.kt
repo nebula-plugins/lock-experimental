@@ -22,11 +22,16 @@ import com.netflix.nebula.lock.task.ConvertLegacyLockTask
 import com.netflix.nebula.lock.task.UpdateLockTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import java.util.*
 
 class NebulaLockPlugin: Plugin<Project> {
     override fun apply(project: Project) {
-        project.tasks.create("updateLocks", UpdateLockTask::class.java)
-        project.tasks.create("convertLegacyLocks", ConvertLegacyLockTask::class.java)
-        GroovyLockExtensions.enhanceDependencySyntax(project)
+        val locksInEffect = ArrayList<Locked>()
+        val lockService = LockService(project, locksInEffect)
+
+        project.tasks.create("updateLocks", UpdateLockTask::class.java) { it.lockService = lockService }
+        project.tasks.create("convertLegacyLocks", ConvertLegacyLockTask::class.java) { it.lockService = lockService }
+        project.extensions.create("lock", LockExtension::class.java)
+        GroovyLockExtensions.enhanceDependencySyntax(project, locksInEffect)
     }
 }

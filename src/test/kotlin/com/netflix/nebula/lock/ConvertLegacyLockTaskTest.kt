@@ -27,7 +27,7 @@ class ConvertLegacyLockTaskTest: TestKitTest() {
         buildFile.writeText("""
             plugins {
                 id 'java'
-                id 'nebula.lock'
+                id 'nebula.lock-experimental'
                 id 'nebula.dependency-lock' version '4.3.0'
             }
 
