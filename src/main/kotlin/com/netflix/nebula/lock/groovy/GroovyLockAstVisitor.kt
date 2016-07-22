@@ -61,72 +61,21 @@ class GroovyLockAstVisitor(val project: Project,
     }
 
     fun visitMethodCallInResolutionStrategies(call: MethodCallExpression) {
-        // https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/dsl/DependencyHandler.html
         val conf = path.takeLastWhile { it != "configurations" }.first()
-
-        val args = when(call.arguments) {
-            is ArgumentListExpression -> (call.arguments as ArgumentListExpression).expressions
-            is TupleExpression -> (call.arguments as TupleExpression).expressions
-            else -> emptyList()
-        }
+        val args = call.parseArgs()
         if(isConf(conf) || conf == "all") {
-            val locks = args.map { arg ->
-                when (arg) {
-                    is MapExpression -> {
-                        val entries = collectEntryExpressions(args)
-                        conf.lockedVersion(entries["group"], entries["name"]!!).let { locked ->
-                            if (locked == entries["version"]) null else locked
-                        }
-                    }
-                    is ConstantExpression -> {
-                        "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(arg.value as String)?.run {
-                            val group = groupValues[1].let { if (it.isEmpty()) null else it }
-                            val name = groupValues[2]
-                            val version = groupValues[3].let { if (it.isEmpty()) null else it }
-                            conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
-                        }
-                    }
-                    else -> null
-                }
-            }
-
-            if (locks.isNotEmpty())
-                updates.add(GroovyLockUpdate(call, locks))
+            val locks = args.map { it.lock(conf, args) }
+            if (locks.isNotEmpty()) updates.add(GroovyLockUpdate(call, locks))
         }
     }
 
     fun visitMethodCallInDependencies(call: MethodCallExpression) {
         // https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/dsl/DependencyHandler.html
         val conf = call.methodAsString
-        val args = when(call.arguments) {
-            is ArgumentListExpression -> (call.arguments as ArgumentListExpression).expressions
-            is TupleExpression -> (call.arguments as TupleExpression).expressions
-            else -> emptyList()
-        }
-
+        val args = call.parseArgs()
         if(isConf(conf)) {
-            val locks = args.map { arg ->
-                when (arg) {
-                    is MapExpression -> {
-                        val entries = collectEntryExpressions(args)
-                        conf.lockedVersion(entries["group"], entries["name"]!!).let { locked ->
-                            if (locked == entries["version"]) null else locked
-                        }
-                    }
-                    is ConstantExpression -> {
-                        "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(arg.value as String)?.run {
-                            val group = groupValues[1].let { if (it.isEmpty()) null else it }
-                            val name = groupValues[2]
-                            val version = groupValues[3].let { if (it.isEmpty()) null else it }
-                            conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
-                        }
-                    }
-                    else -> null
-                }
-            }
-
-            if (locks.isNotEmpty())
-                updates.add(GroovyLockUpdate(call, locks))
+            val locks = args.map { it.lock(conf, args) }
+            if (locks.isNotEmpty()) updates.add(GroovyLockUpdate(call, locks))
         }
     }
 
@@ -170,8 +119,31 @@ class GroovyLockAstVisitor(val project: Project,
         }
     }
 
-    private fun Stack<String>.findConfiguration(): String {
-        val idx = this.indexOf("configuration")
-        return this[idx+1]
+    private fun Expression.lock(conf: String, args: List<Expression>): String? {
+        return when (this) {
+            is MapExpression -> {
+                val entries = collectEntryExpressions(args)
+                conf.lockedVersion(entries["group"], entries["name"]!!).let { locked ->
+                    if (locked == entries["version"]) null else locked
+                }
+            }
+            is ConstantExpression -> {
+                "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(value as String)?.run {
+                    val group = groupValues[1].let { if (it.isEmpty()) null else it }
+                    val name = groupValues[2]
+                    val version = groupValues[3].let { if (it.isEmpty()) null else it }
+                    conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun MethodCallExpression.parseArgs(): List<Expression> {
+        return when(arguments) {
+            is ArgumentListExpression -> (arguments as ArgumentListExpression).expressions
+            is TupleExpression -> (arguments as TupleExpression).expressions
+            else -> emptyList()
+        }
     }
 }
