@@ -31,19 +31,68 @@ class GroovyLockAstVisitor(val project: Project,
                            val overrides: Map<ConfigurationModuleIdentifier, String>): ClassCodeVisitorSupport() {
     val updates = ArrayList<GroovyLockUpdate>()
     private var inDependencies = false
+    private var inResolutionStrategies = false
 
     override fun getSourceUnit(): SourceUnit? = null
+    val path = Stack<String>()
 
     override fun visitMethodCallExpression(call: MethodCallExpression) {
-        if(inDependencies)
-            visitMethodCallInDependencies(call)
+        val caller = call.objectExpression.text
+        if(caller != "this") path.push(caller)
+        path.push(call.methodAsString)
 
-        if(call.methodAsString == "dependencies") {
+        if(inDependencies) {
+            visitMethodCallInDependencies(call)
+        } else if (path.any { it == "dependencies" }) {
             inDependencies = true
             super.visitMethodCallExpression(call)
             inDependencies = false
         }
-        else super.visitMethodCallExpression(call)
+
+        if (inResolutionStrategies) {
+            visitMethodCallInResolutionStrategies(call)
+        } else if (path.any { it == "resolutionStrategy" }) {
+            inResolutionStrategies = true
+            super.visitMethodCallExpression(call)
+            inResolutionStrategies = false
+        } else super.visitMethodCallExpression(call)
+
+        path.pop()
+    }
+
+    fun visitMethodCallInResolutionStrategies(call: MethodCallExpression) {
+        // https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/dsl/DependencyHandler.html
+        val conf = path.takeLastWhile { it != "configurations" }.first()
+
+        val args = when(call.arguments) {
+            is ArgumentListExpression -> (call.arguments as ArgumentListExpression).expressions
+            is TupleExpression -> (call.arguments as TupleExpression).expressions
+            else -> emptyList()
+        }
+        if(isConf(conf) || conf == "all") {
+            val locks = args.map { arg ->
+                when (arg) {
+                    is MapExpression -> {
+                        val entries = collectEntryExpressions(args)
+                        conf.lockedVersion(entries["group"], entries["name"]!!).let { locked ->
+                            if (locked == entries["version"]) null else locked
+                        }
+                    }
+                    is ConstantExpression -> {
+                        "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(arg.value as String)?.run {
+                            val group = groupValues[1].let { if (it.isEmpty()) null else it }
+                            val name = groupValues[2]
+                            val version = groupValues[3].let { if (it.isEmpty()) null else it }
+                            conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
+                        }
+                    }
+                    else -> null
+                }
+            }
+
+            if (locks.isNotEmpty())
+                updates.add(GroovyLockUpdate(call, locks))
+        }
     }
 
     fun visitMethodCallInDependencies(call: MethodCallExpression) {
@@ -96,8 +145,14 @@ class GroovyLockAstVisitor(val project: Project,
         val mid = DefaultModuleIdentifier(group, name)
 
         fun overrideOrResolvedVersion(p: Project): String? {
-            val conf = p.configurations.getByName(this)
-            return overrides[mid.withConf(conf)] ?: conf.resolvedConfiguration.firstLevelModuleDependencies.find { it.module.id.module.equals(mid) }?.moduleVersion
+            val configurations = if(this == "all") p.configurations else setOf(p.configurations.getByName(this))
+            val versions = configurations.map { conf ->
+                overrides[mid.withConf(conf)] ?:
+                        conf.resolvedConfiguration.firstLevelModuleDependencies.find {
+                            it.module.id.module.equals(mid)
+                        }?.moduleVersion
+            }.filterNotNull()
+            return versions.maxWith(DefaultVersionComparator().asStringComparator())
         }
 
         return if(project.rootProject == project) {
@@ -113,5 +168,10 @@ class GroovyLockAstVisitor(val project: Project,
             // subproject of a multi-module project
             overrideOrResolvedVersion(project)
         }
+    }
+
+    private fun Stack<String>.findConfiguration(): String {
+        val idx = this.indexOf("configuration")
+        return this[idx+1]
     }
 }

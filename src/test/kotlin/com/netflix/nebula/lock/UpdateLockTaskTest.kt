@@ -52,8 +52,6 @@ class UpdateLockTaskTest : TestKitTest() {
 
         runTasksSuccessfully("updateLocks")
 
-        println(buildFile.readText())
-
         assertTrue(buildFile.readText().contains("""
             dependencies {
                 compile 'com.google.guava:guava:18.+' lock '18.0'
@@ -136,6 +134,59 @@ class UpdateLockTaskTest : TestKitTest() {
         assertTrue(buildFile.readText().contains("""
                 dependencies {
                     compile 'com.google.guava:guava:18.+' lock '18.0'
+                }
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun lockDynamicForces() {
+        buildFile.appendText("""
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:16.+'
+                }
+            }
+
+            configurations.compile {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:17.+'
+                }
+            }
+
+            configurations {
+                testCompile {
+                    resolutionStrategy {
+                        force 'com.google.guava:guava:14.+'
+                    }
+                }
+            }
+
+            dependencies {
+                compile 'com.google.guava:guava:latest.release'
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:16.+' lock '17.0'
+                }
+            }
+
+            configurations.compile {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:17.+' lock '17.0'
+                }
+            }
+
+            configurations {
+                testCompile {
+                    resolutionStrategy {
+                        force 'com.google.guava:guava:14.+' lock '14.0.1'
+                    }
                 }
             }
         """.trim('\n').trimIndent()))
