@@ -128,7 +128,7 @@ class GroovyLockAstVisitor(val project: Project,
                 }
             }
             is ConstantExpression -> {
-                "([^:]*):([^:]+):([^@:]*).*".toRegex().matchEntire(value as String)?.run {
+                "([^:]*):([^:]+):?([^@:]*).*".toRegex().matchEntire(value as String)?.run {
                     val group = groupValues[1].let { if (it.isEmpty()) null else it }
                     val name = groupValues[2]
                     val version = groupValues[3].let { if (it.isEmpty()) null else it }

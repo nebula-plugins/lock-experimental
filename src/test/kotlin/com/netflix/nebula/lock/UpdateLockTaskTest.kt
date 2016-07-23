@@ -191,4 +191,37 @@ class UpdateLockTaskTest : TestKitTest() {
             }
         """.trim('\n').trimIndent()))
     }
+
+    @Test
+    fun lockFromBom() {
+        buildFile.writeText("""
+            plugins {
+                id 'io.spring.dependency-management' version '0.5.7.RELEASE'
+                id 'java'
+                id 'nebula.lock-experimental'
+            }
+
+            repositories {
+                mavenCentral()
+            }
+
+            dependencyManagement {
+                imports {
+                    mavenBom "org.springframework.cloud:spring-cloud-netflix:1.1.2.RELEASE"
+                }
+            }
+
+            dependencies {
+                compile 'org.springframework.cloud:spring-cloud-starter-feign'
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+            dependencies {
+                compile 'org.springframework.cloud:spring-cloud-starter-feign' lock '1.1.2.RELEASE'
+            }
+        """.trim('\n').trimIndent()))
+    }
 }
