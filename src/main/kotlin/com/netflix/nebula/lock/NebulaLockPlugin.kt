@@ -19,6 +19,7 @@ package com.netflix.nebula.lock
 
 import com.netflix.nebula.lock.groovy.GroovyLockExtensions
 import com.netflix.nebula.lock.task.ConvertLegacyLockTask
+import com.netflix.nebula.lock.task.PrepareForLocksTask
 import com.netflix.nebula.lock.task.UpdateLockTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -31,6 +32,7 @@ class NebulaLockPlugin: Plugin<Project> {
 
         project.tasks.create("updateLocks", UpdateLockTask::class.java) { it.lockService = lockService }
         project.tasks.create("convertLegacyLocks", ConvertLegacyLockTask::class.java) { it.lockService = lockService }
+        project.tasks.create("prepareForLocks", PrepareForLocksTask::class.java) { it.lockService = lockService }
         GroovyLockExtensions.enhanceDependencySyntax(project, locksInEffect)
     }
 }

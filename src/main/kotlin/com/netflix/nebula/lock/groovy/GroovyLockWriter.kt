@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.expr.TupleExpression
 import org.gradle.api.Project
 
 class GroovyLockWriter() {
+    private val lockRegex = " lock '.*'\\s*$".toRegex()
 
     fun updateLocks(project: Project, updates: Collection<GroovyLockUpdate>) {
         val updated = StringBuffer()
@@ -31,28 +32,21 @@ class GroovyLockWriter() {
         while(i < lines.size) {
             if(i > 0) updated.append('\n')
 
-            updates.find { it.method.lineNumber-1 == i }?.apply {
+            updates.find { it.method.lastLineNumber-1 == i }?.apply {
                 when(method.arguments) {
                     is ArgumentListExpression -> {
-                        val conf = method.methodAsString
-                        val args = (method.arguments as ArgumentListExpression).expressions
-                        args.forEachIndexed { j, arg ->
-                            if(j > 0) updated.append('\n')
-                            updated.append(conf.padStart(method.method.columnNumber + conf.length - 1, ' '))
-                            updated.append("".padStart(args[0].columnNumber - method.method.lastColumnNumber, ' '))
-                            updated.append(lines[arg.lineNumber-1].substring(arg.columnNumber-1, arg.lastColumnNumber-1))
-                            if(locks[j] is String)
-                                updated.append(" lock '${locks[j]}'")
-                            i++
+                        val trimmedLine = lines[i++].replace(lockRegex, "")
+                        updated.append(trimmedLine)
+                        if(lock != null) {
+                            updated.append(" lock '$lock'")
                         }
                     }
                     is TupleExpression -> {
-                        if(method.lastLineNumber-1 > i)
-                            updated.append(lines.subList(i, method.lastLineNumber-1).joinToString("\n") + "\n")
-                        updated.append(lines[method.lastLineNumber-1].substring(0, method.lastColumnNumber-1))
-                        if(locks[0] is String)
-                            updated.append(" lock '${locks[0]}'")
-                        i += method.lastLineNumber - method.lineNumber + 1
+                        val trimmedLine = lines[i++].replace(lockRegex, "")
+                        updated.append(trimmedLine)
+                        if(lock != null) {
+                            updated.append(" lock '$lock'")
+                        }
                     }
                 }
 

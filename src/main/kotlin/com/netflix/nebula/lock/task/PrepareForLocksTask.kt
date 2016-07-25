@@ -15,8 +15,15 @@
  *
  */
 
-package com.netflix.nebula.lock.groovy
+package com.netflix.nebula.lock.task
 
-import org.codehaus.groovy.ast.expr.MethodCallExpression
+import com.netflix.nebula.lock.LockService
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
 
-data class GroovyLockUpdate(val method: MethodCallExpression, val lock: String?)
+open class PrepareForLocksTask: DefaultTask() {
+    lateinit var lockService: LockService
+
+    @TaskAction
+    fun updateLock() = lockService.prepareForLocks()
+}

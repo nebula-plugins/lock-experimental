@@ -64,8 +64,8 @@ class GroovyLockAstVisitor(val project: Project,
         val conf = path.takeLastWhile { it != "configurations" }.first()
         val args = call.parseArgs()
         if(isConf(conf) || conf == "all") {
-            val locks = args.map { it.lock(conf, args) }
-            if (locks.isNotEmpty()) updates.add(GroovyLockUpdate(call, locks))
+            val lock = args.first().lock(conf, args)
+            updates.add(GroovyLockUpdate(call, lock))
         }
     }
 
@@ -74,8 +74,8 @@ class GroovyLockAstVisitor(val project: Project,
         val conf = call.methodAsString
         val args = call.parseArgs()
         if(isConf(conf)) {
-            val locks = args.map { it.lock(conf, args) }
-            if (locks.isNotEmpty()) updates.add(GroovyLockUpdate(call, locks))
+            val lock = args.first().lock(conf, args)
+            updates.add(GroovyLockUpdate(call, lock))
         }
     }
 
