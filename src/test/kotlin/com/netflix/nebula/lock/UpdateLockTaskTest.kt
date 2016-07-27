@@ -244,4 +244,36 @@ class UpdateLockTaskTest : TestKitTest() {
             }
         """.trim('\n').trimIndent()))
     }
+
+    @Test
+    fun ignoredBlocksAreNotLocked() {
+        buildFile.appendText("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+'
+                nebulaDependencyLock.ignore {
+                    compile module("com.jcraft:jsch.agentproxy:0.0.9") {
+                        ['jsch', 'sshagent', 'usocket-jna', 'usocket-nc'].each {
+                            dependency "com.jcraft:jsch.agentproxy.${'$'}{it}:0.0.9"
+                        }
+                    }
+                }
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        val readText = buildFile.readText()
+        assertTrue(readText.contains("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+' lock '18.0'
+                nebulaDependencyLock.ignore {
+                    compile module("com.jcraft:jsch.agentproxy:0.0.9") {
+                        ['jsch', 'sshagent', 'usocket-jna', 'usocket-nc'].each {
+                            dependency "com.jcraft:jsch.agentproxy.${'$'}{it}:0.0.9"
+                        }
+                    }
+                }
+            }
+        """.trim('\n').trimIndent()))
+    }
 }
