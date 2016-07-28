@@ -47,7 +47,6 @@ class LockService(val project: Project, val locksInEffect: List<Locked>) {
                 cacheChangingModulesFor(0, "seconds")
             }
         }
-        prepareForLocks()
         arrayOf(project, project.rootProject).toSet().forEach { p ->
             when {
                 p.buildFile.name.endsWith("gradle") -> updateLockGroovy(p, overrides)

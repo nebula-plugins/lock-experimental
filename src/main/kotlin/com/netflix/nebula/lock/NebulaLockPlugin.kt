@@ -31,9 +31,9 @@ class NebulaLockPlugin: Plugin<Project> {
         val locksInEffect = ArrayList<Locked>()
         val lockService = LockService(project, locksInEffect)
 
-        project.tasks.create("updateLocks", UpdateLockTask::class.java) { it.lockService = lockService }
+        val prepareForLocks = project.tasks.create("prepareForLocks", PrepareForLocksTask::class.java) { it.lockService = lockService }
+        project.tasks.create("updateLocks", UpdateLockTask::class.java) { it.lockService = lockService }.dependsOn(prepareForLocks)
         project.tasks.create("convertLegacyLocks", ConvertLegacyLockTask::class.java) { it.lockService = lockService }
-        project.tasks.create("prepareForLocks", PrepareForLocksTask::class.java) { it.lockService = lockService }
         project.extensions.create("nebulaDependencyLock", NebulaLockExtension::class.java)
         GroovyLockExtensions.enhanceDependencySyntax(project, locksInEffect)
     }
