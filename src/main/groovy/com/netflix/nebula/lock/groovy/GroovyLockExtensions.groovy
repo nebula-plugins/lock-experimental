@@ -21,6 +21,7 @@ import com.netflix.nebula.lock.Locked
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ResolutionStrategy
 import org.gradle.api.internal.artifacts.dependencies.DefaultExternalModuleDependency
 
 class GroovyLockExtensions {
@@ -36,6 +37,25 @@ class GroovyLockExtensions {
         cachedLocksInEffect = locksInEffect
 
         Dependency.metaClass.lock = { lockedVersion ->
+            if(delegate instanceof ExternalModuleDependency && !cachedProject.hasProperty('dependencyLock.ignore')) {
+                ExternalModuleDependency dep = delegate
+
+                def containingConf = cachedProject.configurations.find { it.dependencies.any { it.is(dep) } }
+                containingConf.dependencies.remove(dep)
+
+                def locked = new DefaultExternalModuleDependency(dep.group, dep.name, lockedVersion?.toString(), dep.configuration)
+                locked.setChanging(dep.changing)
+                locked.setForce(dep.force)
+
+                containingConf.dependencies.add(locked)
+
+                cachedLocksInEffect.add(new Locked(locked, dep))
+            }
+
+            return this
+        }
+
+        ResolutionStrategy.metaClass.lock = { lockedVersion ->
             if(delegate instanceof ExternalModuleDependency && !cachedProject.hasProperty('dependencyLock.ignore')) {
                 ExternalModuleDependency dep = delegate
 

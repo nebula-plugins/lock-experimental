@@ -42,6 +42,11 @@ class StripLocksTaskTest : TestKitTest() {
     @Test
     fun stripLocks() {
         buildFile.appendText("""
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:16.+' lock '19.0'
+                }
+            }
             dependencies {
                 compile 'com.google.guava:guava:18.+' lock '17.0'
                 compile group: 'commons-lang',
@@ -56,6 +61,11 @@ class StripLocksTaskTest : TestKitTest() {
         runTasksSuccessfully("stripLocks")
 
         assertTrue(buildFile.readText().contains("""
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:16.+'
+                }
+            }
             dependencies {
                 compile 'com.google.guava:guava:18.+'
                 compile group: 'commons-lang',
