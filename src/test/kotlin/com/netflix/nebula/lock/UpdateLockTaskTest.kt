@@ -52,8 +52,6 @@ class UpdateLockTaskTest : TestKitTest() {
 
         runTasksSuccessfully("updateLocks")
 
-        println(buildFile.readText())
-
         assertTrue(buildFile.readText().contains("""
             dependencies {
                 compile 'com.google.guava:guava:18.+' lock '18.0'
@@ -118,6 +116,26 @@ class UpdateLockTaskTest : TestKitTest() {
     }
 
     @Test
+    fun dependenciesWithClosure() {
+        buildFile.appendText("""
+            dependencies {
+                compile('com.google.guava:guava:18.+') {
+                    changing = true
+                }
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+        assertTrue(buildFile.readText().contains("""
+            dependencies {
+                compile('com.google.guava:guava:18.+') {
+                    changing = true
+                } lock '18.0'
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
     fun lockRootProjectDependencies() {
         addSubproject("sub", "plugins { id 'nebula.lock-experimental' }")
 
@@ -136,6 +154,124 @@ class UpdateLockTaskTest : TestKitTest() {
         assertTrue(buildFile.readText().contains("""
                 dependencies {
                     compile 'com.google.guava:guava:18.+' lock '18.0'
+                }
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun lockDynamicForces() {
+        buildFile.appendText("""
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:16.+'
+                }
+            }
+
+            configurations.compile {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:17.+'
+                }
+            }
+
+            configurations {
+                testCompile {
+                    resolutionStrategy {
+                        force 'com.google.guava:guava:14.+'
+                    }
+                }
+            }
+
+            dependencies {
+                compile 'com.google.guava:guava:latest.release'
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:16.+' lock '17.0'
+                }
+            }
+
+            configurations.compile {
+                resolutionStrategy {
+                    force 'com.google.guava:guava:17.+' lock '17.0'
+                }
+            }
+
+            configurations {
+                testCompile {
+                    resolutionStrategy {
+                        force 'com.google.guava:guava:14.+' lock '14.0.1'
+                    }
+                }
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun lockFromBom() {
+        buildFile.writeText("""
+            plugins {
+                id 'io.spring.dependency-management' version '0.5.7.RELEASE'
+                id 'java'
+                id 'nebula.lock-experimental'
+            }
+
+            repositories {
+                mavenCentral()
+            }
+
+            dependencyManagement {
+                imports {
+                    mavenBom "org.springframework.cloud:spring-cloud-netflix:1.1.2.RELEASE"
+                }
+            }
+
+            dependencies {
+                compile 'org.springframework.cloud:spring-cloud-starter-feign'
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        assertTrue(buildFile.readText().contains("""
+            dependencies {
+                compile 'org.springframework.cloud:spring-cloud-starter-feign' lock '1.1.2.RELEASE'
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun ignoredBlocksAreNotLocked() {
+        buildFile.appendText("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+'
+                nebulaDependencyLock.ignore {
+                    compile module("com.jcraft:jsch.agentproxy:0.0.9") {
+                        ['jsch', 'sshagent', 'usocket-jna', 'usocket-nc'].each {
+                            dependency "com.jcraft:jsch.agentproxy.${'$'}{it}:0.0.9"
+                        }
+                    }
+                }
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        val readText = buildFile.readText()
+        assertTrue(readText.contains("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+' lock '18.0'
+                nebulaDependencyLock.ignore {
+                    compile module("com.jcraft:jsch.agentproxy:0.0.9") {
+                        ['jsch', 'sshagent', 'usocket-jna', 'usocket-nc'].each {
+                            dependency "com.jcraft:jsch.agentproxy.${'$'}{it}:0.0.9"
+                        }
+                    }
                 }
             }
         """.trim('\n').trimIndent()))

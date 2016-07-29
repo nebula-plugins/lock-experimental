@@ -62,6 +62,20 @@ class LockTest: TestKitTest() {
     }
 
     @Test
+    fun ignoredDependenciesAreStillResolved() {
+        buildFile.appendText("""
+            dependencies {
+                nebulaDependencyLock.ignore {
+                    compile 'com.google.guava:guava:19.0'
+                }
+            }
+        """)
+
+        val result = runTasksSuccessfully("listDependencies")
+        result.assertDependency("com.google.guava:guava:19.0", "compile")
+    }
+
+    @Test
     fun lockingWithFloatingPointNumbersIsOk() {
         buildFile.appendText("""
             dependencies {

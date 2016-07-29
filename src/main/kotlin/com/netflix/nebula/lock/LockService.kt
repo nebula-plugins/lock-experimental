@@ -18,13 +18,16 @@
 package com.netflix.nebula.lock
 
 import com.netflix.nebula.lock.groovy.GroovyLockAstVisitor
+import com.netflix.nebula.lock.groovy.GroovyLockPreparationWriter
 import com.netflix.nebula.lock.groovy.GroovyLockWriter
+import com.netflix.nebula.lock.groovy.GroovyPrepareForLocksAstVisitor
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.gradle.api.Project
 
 class LockService(val project: Project, val locksInEffect: List<Locked>) {
     val groovyLockWriter = GroovyLockWriter()
+    val groovyLockPreparationWriter = GroovyLockPreparationWriter()
 
     fun undoLocks() {
         locksInEffect.forEach { lock ->
@@ -44,7 +47,6 @@ class LockService(val project: Project, val locksInEffect: List<Locked>) {
                 cacheChangingModulesFor(0, "seconds")
             }
         }
-
         arrayOf(project, project.rootProject).toSet().forEach { p ->
             when {
                 p.buildFile.name.endsWith("gradle") -> updateLockGroovy(p, overrides)
@@ -66,5 +68,17 @@ class LockService(val project: Project, val locksInEffect: List<Locked>) {
 
     fun updateLockKotlin(p: Project, overrides: Map<ConfigurationModuleIdentifier, String>) {
         // TODO implement me
+    }
+
+    fun prepareForLocks() {
+        arrayOf(project, project.rootProject).toSet().forEach { p ->
+            val ast = AstBuilder().buildFromString(p.buildFile.readText())
+            val stmt = ast.find { it is BlockStatement }
+            if (stmt is BlockStatement) {
+                val visitor = GroovyPrepareForLocksAstVisitor(p)
+                visitor.visitBlockStatement(stmt)
+                groovyLockPreparationWriter.prepareDependencies(p, visitor.updates)
+            }
+        }
     }
 }
