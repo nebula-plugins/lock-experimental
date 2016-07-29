@@ -38,6 +38,12 @@ class LockService(val project: Project, val locksInEffect: List<Locked>) {
         }
     }
 
+    fun stripLocks() {
+        arrayOf(project, project.rootProject).toSet().forEach { p ->
+            groovyLockWriter.stripLocks(p)
+        }
+    }
+
     fun updateLocks(overrides: Map<ConfigurationModuleIdentifier, String> = emptyMap()) {
         undoLocks()
 
