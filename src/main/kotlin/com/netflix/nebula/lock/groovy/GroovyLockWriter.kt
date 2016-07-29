@@ -25,7 +25,7 @@ class GroovyLockWriter() {
     private val lockRegex = " lock '.*'\\s*$".toRegex()
 
     fun updateLocks(project: Project, updates: Collection<GroovyLockUpdate>) {
-        val updated = StringBuffer()
+        val updated = StringBuilder()
 
         val lines = project.buildFile.readLines()
         var i = 0
@@ -35,14 +35,14 @@ class GroovyLockWriter() {
             updates.find { it.method.lastLineNumber-1 == i }?.apply {
                 when(method.arguments) {
                     is ArgumentListExpression -> {
-                        val trimmedLine = lines[i++].replace(lockRegex, "")
+                        val trimmedLine = lines[i++].removeLock()
                         updated.append(trimmedLine)
                         if(lock != null) {
                             updated.append(" lock '$lock'")
                         }
                     }
                     is TupleExpression -> {
-                        val trimmedLine = lines[i++].replace(lockRegex, "")
+                        val trimmedLine = lines[i++].removeLock()
                         updated.append(trimmedLine)
                         if(lock != null) {
                             updated.append(" lock '$lock'")
@@ -56,4 +56,13 @@ class GroovyLockWriter() {
         project.buildFile.writeText(updated.toString())
     }
 
+    fun stripLocks(project: Project) {
+        val updated = StringBuilder()
+        project.buildFile.readLines().forEach {
+            updated.appendln(it.removeLock())
+        }
+        project.buildFile.writeText(updated.toString())
+    }
+
+    private fun String.removeLock() = replace(lockRegex, "")
 }
