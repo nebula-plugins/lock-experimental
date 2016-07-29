@@ -251,6 +251,7 @@ class UpdateLockTaskTest : TestKitTest() {
             dependencies {
                 compile 'com.google.guava:guava:18.+'
                 nebulaDependencyLock.ignore {
+                    compile 'com.google.dagger:dagger:2.+'
                     compile module("com.jcraft:jsch.agentproxy:0.0.9") {
                         ['jsch', 'sshagent', 'usocket-jna', 'usocket-nc'].each {
                             dependency "com.jcraft:jsch.agentproxy.${'$'}{it}:0.0.9"
@@ -267,6 +268,7 @@ class UpdateLockTaskTest : TestKitTest() {
             dependencies {
                 compile 'com.google.guava:guava:18.+' lock '18.0'
                 nebulaDependencyLock.ignore {
+                    compile 'com.google.dagger:dagger:2.+'
                     compile module("com.jcraft:jsch.agentproxy:0.0.9") {
                         ['jsch', 'sshagent', 'usocket-jna', 'usocket-nc'].each {
                             dependency "com.jcraft:jsch.agentproxy.${'$'}{it}:0.0.9"

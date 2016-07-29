@@ -61,6 +61,7 @@ class GroovyLockAstVisitor(val project: Project,
     }
 
     fun visitMethodCallInResolutionStrategies(call: MethodCallExpression) {
+        if(path.any { it == "ignore" }) return
         val conf = path.takeLastWhile { it != "configurations" }.first()
         val args = call.parseArgs()
         if(isConf(conf) || conf == "all") {
@@ -70,6 +71,7 @@ class GroovyLockAstVisitor(val project: Project,
     }
 
     fun visitMethodCallInDependencies(call: MethodCallExpression) {
+        if(path.any { it == "ignore" }) return
         // https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/dsl/DependencyHandler.html
         val conf = call.methodAsString
         val args = call.parseArgs()
