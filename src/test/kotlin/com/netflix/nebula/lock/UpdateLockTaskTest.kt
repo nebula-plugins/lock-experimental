@@ -136,6 +136,73 @@ class UpdateLockTaskTest : TestKitTest() {
     }
 
     @Test
+    fun dependenciesWithVariable() {
+        buildFile.appendText("""
+            def version = '18.+'
+            dependencies {
+                compile "com.google.guava:guava:${'$'}version"
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        val readText = buildFile.readText()
+        assertTrue(readText.contains("""
+            def version = '18.+'
+            dependencies {
+                compile "com.google.guava:guava:${'$'}version" lock '18.0'
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun dependenciesWithVariableFromExt() {
+        buildFile.appendText("""
+            ext {
+                versions = [:]
+                versions.guava = '18.+'
+            }
+            dependencies {
+                compile "com.google.guava:guava:${'$'}{versions.guava}"
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        val readText = buildFile.readText()
+        assertTrue(readText.contains("""
+            dependencies {
+                compile "com.google.guava:guava:${'$'}{versions.guava}" lock '18.0'
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
+    fun ignoreDependenciesWithVariableThatSetsCompleteVersion() {
+        buildFile.appendText("""
+            ext {
+                versions = [:]
+                versions.guice = '4.0'
+            }
+            def completeGuavaVersion = '18.0'
+            dependencies {
+                compile "com.google.guava:guava:${'$'}completeGuavaVersion"
+                compile "com.google.inject:guice:${'$'}{versions.guice}"
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        val readText = buildFile.readText()
+        assertTrue(readText.contains("""
+            dependencies {
+                compile "com.google.guava:guava:${'$'}completeGuavaVersion"
+                compile "com.google.inject:guice:${'$'}{versions.guice}"
+            }
+        """.trim('\n').trimIndent()))
+    }
+
+    @Test
     fun lockRootProjectDependencies() {
         addSubproject("sub", "plugins { id 'nebula.lock-experimental' }")
 

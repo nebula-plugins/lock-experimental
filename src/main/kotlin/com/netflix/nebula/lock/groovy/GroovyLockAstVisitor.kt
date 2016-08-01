@@ -28,8 +28,10 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultV
 import java.util.*
 
 class GroovyLockAstVisitor(val project: Project,
-                           val overrides: Map<ConfigurationModuleIdentifier, String>): ClassCodeVisitorSupport() {
+                           val overrides: Map<ConfigurationModuleIdentifier, String>,
+                           val variableDefinitions: Map<String, String>): ClassCodeVisitorSupport() {
     val updates = ArrayList<GroovyLockUpdate>()
+    private val mvidPattern = "([^:]*):([^:]+):?([^@:]*).*".toRegex()
     private var inDependencies = false
     private var inResolutionStrategies = false
 
@@ -130,10 +132,24 @@ class GroovyLockAstVisitor(val project: Project,
                 }
             }
             is ConstantExpression -> {
-                "([^:]*):([^:]+):?([^@:]*).*".toRegex().matchEntire(value as String)?.run {
+                mvidPattern.matchEntire(value as String)?.run {
                     val group = groupValues[1].let { if (it.isEmpty()) null else it }
                     val name = groupValues[2]
                     val version = groupValues[3].let { if (it.isEmpty()) null else it }
+                    conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
+                }
+            }
+            is GStringExpression -> {
+                mvidPattern.matchEntire(text)?.run {
+                    val group = groupValues[1].let { if (it.isEmpty()) null else it }
+                    val name = groupValues[2]
+                    val version = groupValues[3].let {
+                        when {
+                            it.isEmpty() -> null
+                            it.startsWith("$") -> variableDefinitions[it.drop(1)]
+                            else -> it
+                        }
+                    }
                     conf.lockedVersion(group, name).let { locked -> if (locked == version) null else locked }
                 }
             }

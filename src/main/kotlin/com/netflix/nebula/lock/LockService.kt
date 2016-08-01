@@ -17,10 +17,7 @@
 
 package com.netflix.nebula.lock
 
-import com.netflix.nebula.lock.groovy.GroovyLockAstVisitor
-import com.netflix.nebula.lock.groovy.GroovyLockPreparationWriter
-import com.netflix.nebula.lock.groovy.GroovyLockWriter
-import com.netflix.nebula.lock.groovy.GroovyPrepareForLocksAstVisitor
+import com.netflix.nebula.lock.groovy.*
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.gradle.api.Project
@@ -66,7 +63,9 @@ class LockService(val project: Project, val locksInEffect: List<Locked>) {
         val ast = AstBuilder().buildFromString(p.buildFile.readText())
         val stmt = ast.find { it is BlockStatement }
         if(stmt is BlockStatement) {
-            val visitor = GroovyLockAstVisitor(p, overrides)
+            val variableExtractionVisitor = GroovyVariableExtractionVisitor()
+            variableExtractionVisitor.visitBlockStatement(stmt)
+            val visitor = GroovyLockAstVisitor(p, overrides, variableExtractionVisitor.variables)
             visitor.visitBlockStatement(stmt)
             groovyLockWriter.updateLocks(p, visitor.updates)
         }
