@@ -33,13 +33,19 @@ class GroovyLockWriter() {
             if(i > 0) updated.append('\n')
 
             updates.find { it.method.lastLineNumber-1 == i }?.apply {
-                when(method.arguments) {
+                val arguments = method.arguments
+                when(arguments) {
                     is ArgumentListExpression -> {
-                        val trimmedLine = lines[i++].removeLock()
-                        updated.append(trimmedLine)
+                        val line = lines[i++]
+                        val endOfLastArgument = arguments.last().lastColumnNumber-1
+                        val sb = StringBuilder(line.substring(0, endOfLastArgument))
+                        val restOfLine = if(endOfLastArgument <= line.length) { line.substring(endOfLastArgument) } else ""
+                        val trimmedRestOfLine = restOfLine.replace("^\\s*lock '.*'".toRegex(), "")
                         if(lock != null) {
-                            updated.append(" lock '$lock'")
+                            sb.append(" lock '$lock'")
                         }
+                        sb.append(trimmedRestOfLine)
+                        updated.append(sb.toString())
                     }
                     is TupleExpression -> {
                         val trimmedLine = lines[i++].removeLock()

@@ -54,12 +54,13 @@ class GroovyPrepareForLocksAstVisitor(val project: Project) : ClassCodeVisitorSu
         // https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/dsl/DependencyHandler.html
         val conf = call.methodAsString
         val args = call.parseArgs()
-        if (args.any { it is ClosureExpression || it is MapExpression }) return
-        if (isConf(conf)) {
-            args.map {
-                updates
-                        .getOrPut((it.lineNumber - 1..it.lastLineNumber - 1), { mutableListOf<ConfigurationDependency>() })
-                        .add(ConfigurationDependency(call.columnNumber - 1, conf, Declaration(it.columnNumber - 1, it.lastColumnNumber - 1, it.lineNumber - 1, it.lastLineNumber - 1)))
+        if (args.size > 1 && args.all { it is ConstantExpression || it is GStringExpression }) {
+            if (isConf(conf)) {
+                args.map {
+                    updates
+                            .getOrPut((it.lineNumber - 1..it.lastLineNumber - 1), { mutableListOf<ConfigurationDependency>() })
+                            .add(ConfigurationDependency(call.columnNumber - 1, conf, Declaration(it.columnNumber - 1, it.lastColumnNumber - 1, it.lineNumber - 1, it.lastLineNumber - 1)))
+                }
             }
         }
     }

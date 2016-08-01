@@ -278,4 +278,24 @@ class UpdateLockTaskTest : TestKitTest() {
             }
         """.trim('\n').trimIndent()))
     }
+
+    @Test
+    fun trailingCommentsAreRetained() {
+        buildFile.appendText("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+' // comments should stay 1
+                compile "commons-beanutils:commons-beanutils:1.8.+" // comments should stay 2
+            }
+        """.trim('\n').trimIndent())
+
+        runTasksSuccessfully("updateLocks")
+
+        val readText = buildFile.readText()
+        assertTrue(readText.contains("""
+            dependencies {
+                compile 'com.google.guava:guava:18.+' lock '18.0' // comments should stay 1
+                compile "commons-beanutils:commons-beanutils:1.8.+" lock '1.8.3' // comments should stay 2
+            }
+        """.trim('\n').trimIndent()))
+    }
 }
