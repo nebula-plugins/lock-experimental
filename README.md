@@ -1,5 +1,10 @@
 # Gradle Dependency Lock (Experimental)
 
+![Support Status](https://img.shields.io/badge/nebula-incubating-yellow.svg)
+[![Build Status](https://travis-ci.org/nebula-plugins/lock-experimental.svg?branch=master)](https://travis-ci.org/nebula-plugins/lock-experimental)
+[![Apache 2.0](https://img.shields.io/github/license/nebula-plugins/lock-experimental.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Version](https://img.shields.io/bintray/v/nebula/gradle-plugins/lock-experimental.svg)](https://bintray.com/nebula/gradle-plugins/lock-experimental)
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 - [Purpose](#purpose)
