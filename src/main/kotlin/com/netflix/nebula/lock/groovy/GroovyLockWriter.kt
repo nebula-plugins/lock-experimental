@@ -21,7 +21,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.TupleExpression
 import org.gradle.api.Project
 
-class GroovyLockWriter() {
+class GroovyLockWriter {
     private val lockRegex = " lock '.*'\\s*$".toRegex()
 
     fun updateLocks(project: Project, updates: Collection<GroovyLockUpdate>) {

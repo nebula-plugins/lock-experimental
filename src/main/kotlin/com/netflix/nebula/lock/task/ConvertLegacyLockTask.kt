@@ -56,7 +56,7 @@ open class ConvertLegacyLockTask: DefaultTask() {
             acc
         }
 
-        lockService?.updateLocks(overrides)
+        lockService.updateLocks(overrides)
 
         lockFile.delete()
     }

@@ -19,7 +19,7 @@ package com.netflix.nebula.lock.groovy
 
 import org.gradle.api.Project
 
-class GroovyLockPreparationWriter() {
+class GroovyLockPreparationWriter {
 
     fun prepareDependencies(project: Project, updates: Map<IntRange, List<ConfigurationDependency>>) {
         val updated = StringBuilder()

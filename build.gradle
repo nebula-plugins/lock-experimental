@@ -17,7 +17,7 @@
 plugins {
     id 'com.gradle.plugin-publish' version '0.9.4'
     id 'nebula.plugin-plugin' version '4.22.0'
-    id 'nebula.kotlin' version '1.0.2'
+    id 'nebula.kotlin' version '1.0.5'
     id 'java-gradle-plugin'
     id 'groovy'
 }
@@ -33,7 +33,7 @@ contacts {
 
 dependencies {
     compileOnly 'org.codehaus.groovy:groovy-all:2.4.4'
-    compile 'com.beust:klaxon:0.24'
+    compile 'com.beust:klaxon:0.27'
 }
 
 pluginBundle {
@@ -45,6 +45,10 @@ pluginBundle {
             tags = ['nebula', 'dependency', 'lock']
         }
     }
+
+    website = 'https://github.com/nebula-plugins/lock-experimental'
+    vcsUrl = 'https://github.com/nebula-plugins/lock-experimental.git'
+    description = 'Plugin to lock dynamic dependencies and forces'
 }
 
 compileGroovy.dependsOn = compileGroovy.taskDependencies.values - 'compileJava'
