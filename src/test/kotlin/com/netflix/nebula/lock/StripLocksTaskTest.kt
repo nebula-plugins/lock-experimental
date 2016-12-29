@@ -29,7 +29,7 @@ class StripLocksTaskTest : TestKitTest() {
         buildFile.writeText("""
             plugins {
                 id 'java'
-                id 'nebula.lock-experimental'
+                id 'nebula.lock'
             }
 
             repositories {

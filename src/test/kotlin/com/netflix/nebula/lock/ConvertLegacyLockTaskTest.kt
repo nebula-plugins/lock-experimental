@@ -27,7 +27,7 @@ class ConvertLegacyLockTaskTest: TestKitTest() {
         buildFile.writeText("""
             plugins {
                 id 'java'
-                id 'nebula.lock-experimental'
+                id 'nebula.lock'
                 id 'nebula.dependency-lock' version '4.3.0'
             }
 
@@ -42,7 +42,8 @@ class ConvertLegacyLockTaskTest: TestKitTest() {
 
         runTasksSuccessfully("generateLock", "saveLock")
         val lock = File(projectDir, "dependencies.lock")
-        lock.writeText(lock.readText().replace("\\d+\\.0".toRegex(), "16.0"))
+        lock.writeText(lock.readText().replace(""""locked":(\s+)"[^"]+"""".toRegex(),
+                """"locked":$1"16.0""""))
 
         runTasksSuccessfully("convertLegacyLock")
 

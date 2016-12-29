@@ -29,7 +29,7 @@ class UpdateLockTaskTest : TestKitTest() {
         buildFile.writeText("""
             plugins {
                 id 'java'
-                id 'nebula.lock-experimental'
+                id 'nebula.lock'
             }
 
             repositories {
@@ -204,7 +204,7 @@ class UpdateLockTaskTest : TestKitTest() {
 
     @Test
     fun lockRootProjectDependencies() {
-        addSubproject("sub", "plugins { id 'nebula.lock-experimental' }")
+        addSubproject("sub", "plugins { id 'nebula.lock' }")
 
         buildFile.writeText("""
             subprojects {
@@ -283,9 +283,9 @@ class UpdateLockTaskTest : TestKitTest() {
     fun lockFromBom() {
         buildFile.writeText("""
             plugins {
-                id 'io.spring.dependency-management' version '0.5.7.RELEASE'
+                id 'io.spring.dependency-management' version '1.0.0.RC1'
                 id 'java'
-                id 'nebula.lock-experimental'
+                id 'nebula.lock'
             }
 
             repositories {

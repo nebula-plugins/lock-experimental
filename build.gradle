@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 /*
  * Copyright 2014-2015 Netflix, Inc.
  *
@@ -55,3 +57,21 @@ compileGroovy.dependsOn = compileGroovy.taskDependencies.values - 'compileJava'
 compileKotlin.dependsOn compileGroovy
 compileKotlin.classpath += files(compileGroovy.destinationDir)
 classes.dependsOn compileKotlin
+
+task validatePlugin(dependsOn: jar) {
+    doLast {
+        com.gradle.publish.PublishTask publishTask = tasks.find { it instanceof com.gradle.publish.PublishTask }
+        def jar = file('build/libs').listFiles().find {
+            it.name.endsWith('.jar') &&
+                    !it.name.endsWith('doc.jar') &&
+                    !it.name.endsWith('sources.jar')
+        }
+
+        def validate = com.gradle.publish.PublishTask.class.declaredMethods.find {
+            it.name == 'validatePluginDescriptor'
+        }
+        validate.accessible = true
+        validate.invoke(publishTask, new ZipFile(jar), 'nebula.lock')
+        logger.lifecycle('Validated plugin successfully')
+    }
+}
