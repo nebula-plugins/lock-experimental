@@ -1,6 +1,8 @@
 # Gradle Dependency Lock (Experimental)
 
-![Support Status](https://img.shields.io/badge/nebula-incubating-yellow.svg)
+Inactive. Please see [Gradle's Dependency Locking](https://docs.gradle.org/current/userguide/dependency_locking.html).
+
+![Support Status](https://img.shields.io/badge/nebula-inactive-red.svg)
 [![Build Status](https://travis-ci.org/nebula-plugins/lock-experimental.svg?branch=master)](https://travis-ci.org/nebula-plugins/lock-experimental)
 [![Apache 2.0](https://img.shields.io/github/license/nebula-plugins/lock-experimental.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Version](https://img.shields.io/bintray/v/nebula/gradle-plugins/lock-experimental.svg)](https://bintray.com/nebula/gradle-plugins/lock-experimental)
